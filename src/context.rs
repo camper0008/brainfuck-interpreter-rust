@@ -42,7 +42,10 @@ impl Context {
         for i in code.chars() {
             if i == '[' {
                 self.create_bracket_pairs(code.clone(), pos)
-                    .expect(format!("unclosed bracket at {}", pos).as_str())
+                    .expect(format!("unclosed bracket start at character {}", pos).as_str());
+            } else if i == ']' {
+                self.get_bracket_pair(pos)
+                    .expect(format!("unclosed bracket end at character {}", pos).as_str());
             }
             pos += 1;
         }
