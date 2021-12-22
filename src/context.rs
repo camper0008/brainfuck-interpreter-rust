@@ -20,6 +20,7 @@ impl Context {
         let mut nested = 0;
         let mut pos = start;
         for i in code.chars().skip((1 + start).try_into().unwrap()) {
+            pos += 1;
             if i == '[' {
                 nested += 1;
             } else if i == ']' {
@@ -33,7 +34,6 @@ impl Context {
                     nested -= 1;
                 }
             }
-            pos += 1;
         }
         Err(ErrorType::InvalidBracketPairError)
     }
