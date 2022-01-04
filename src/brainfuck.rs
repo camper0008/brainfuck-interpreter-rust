@@ -3,18 +3,22 @@ use crate::context::TokenType;
 use crate::io;
 
 fn incr(ctx: &mut Context) {
-    if ctx.stack[ctx.stack_index] == u8::MAX {
-        ctx.stack[ctx.stack_index] = u8::MIN;
-    } else {
-        ctx.stack[ctx.stack_index] += 1;
+    for _ in 0..ctx.tokens[ctx.cursor].v {
+        if ctx.stack[ctx.stack_index] == u8::MAX {
+            ctx.stack[ctx.stack_index] = u8::MIN;
+        } else {
+            ctx.stack[ctx.stack_index] += 1;
+        }
     }
 }
 
 fn decr(ctx: &mut Context) {
-    if ctx.stack[ctx.stack_index] == u8::MIN {
-        ctx.stack[ctx.stack_index] = u8::MAX;
-    } else {
-        ctx.stack[ctx.stack_index] -= 1;
+    for _ in 0..ctx.tokens[ctx.cursor].v {
+        if ctx.stack[ctx.stack_index] == u8::MIN {
+            ctx.stack[ctx.stack_index] = u8::MAX;
+        } else {
+            ctx.stack[ctx.stack_index] -= 1;
+        }
     }
 }
 
@@ -27,17 +31,21 @@ fn output(ctx: &Context) {
 }
 
 fn incr_ptr(ctx: &mut Context) {
-    if ctx.stack_index + 1 >= ctx.stack.len() {
-        ctx.stack.push(0)
+    for _ in 0..ctx.tokens[ctx.cursor].v {
+        if ctx.stack_index + 1 >= ctx.stack.len() {
+            ctx.stack.push(0)
+        }
+        ctx.stack_index += 1;
     }
-    ctx.stack_index += 1;
 }
 
 fn decr_ptr(ctx: &mut Context) {
-    if ctx.stack_index == 0 {
-        panic!("pointer went below 0");
-    } else {
-        ctx.stack_index -= 1;
+    for _ in 0..ctx.tokens[ctx.cursor].v {
+        if ctx.stack_index == 0 {
+            panic!("pointer went below 0");
+        } else {
+            ctx.stack_index -= 1;
+        }
     }
 }
 

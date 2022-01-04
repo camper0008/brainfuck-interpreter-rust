@@ -39,6 +39,29 @@ fn generate_matching_brackets(tokens: &mut Vec<Token>) {
     }
 }
 
+fn fold_duplicates(tokens: &mut Vec<Token>) {
+    if tokens.len() < 2 {
+        return;
+    }
+    let mut cursor = 0;
+    while cursor < tokens.len() - 1 {
+        match tokens[cursor].t {
+            TokenType::Increment
+            | TokenType::Decrement
+            | TokenType::IncrementPointer
+            | TokenType::DecrementPointer => {
+                if tokens[cursor].t == tokens[cursor + 1].t {
+                    tokens[cursor].v += tokens[cursor + 1].v;
+                    tokens.remove(cursor + 1);
+                } else {
+                    cursor += 1;
+                }
+            }
+            _ => cursor += 1,
+        }
+    }
+}
+
 fn tokenize(code: String) -> Vec<Token> {
     let mut res = Vec::new();
     for c in code.chars() {
@@ -86,8 +109,9 @@ fn tokenize(code: String) -> Vec<Token> {
         .into_iter()
         .filter(|token| token.t != TokenType::Comment)
         .collect();
-
+    fold_duplicates(&mut res);
     generate_matching_brackets(&mut res);
+    //println!("{:?}", res);
 
     res
 }
