@@ -1,4 +1,5 @@
 use crate::context::Context;
+use crate::context::TokenType;
 use crate::io;
 
 fn incr(ctx: &mut Context) {
@@ -17,12 +18,12 @@ fn decr(ctx: &mut Context) {
     }
 }
 
-fn output(ctx: &Context) {
-    print!("{}", ctx.stack[ctx.stack_index] as char);
-}
-
 fn input(ctx: &mut Context) {
     ctx.stack[ctx.stack_index] = io::get_char();
+}
+
+fn output(ctx: &Context) {
+    print!("{}", ctx.stack[ctx.stack_index] as char);
 }
 
 fn incr_ptr(ctx: &mut Context) {
@@ -40,42 +41,35 @@ fn decr_ptr(ctx: &mut Context) {
     }
 }
 
-fn handle_loop_start(ctx: &mut Context, cursor: &mut usize) {
+fn handle_loop_start(ctx: &mut Context) {
     if ctx.stack[ctx.stack_index] == 0 {
-        let end = ctx.get_bracket_end(*cursor);
-        *cursor = end;
+        ctx.cursor = ctx.tokens[ctx.cursor].v;
     }
 }
 
-fn handle_loop_end(ctx: &mut Context, cursor: &mut usize) {
+fn handle_loop_end(ctx: &mut Context) {
     if ctx.stack[ctx.stack_index] != 0 {
-        let start = ctx.get_bracket_start(*cursor);
-        *cursor = start;
+        ctx.cursor = ctx.tokens[ctx.cursor].v;
     }
 }
 
-pub fn run(code: String, mut ctx: Context) {
+pub fn run(mut ctx: Context) {
     if ctx.stack.len() == 0 {
         ctx.stack.push(0);
     }
 
-    let mut cursor: usize = 0;
-    while cursor < code.len() {
-        let c = code
-            .chars()
-            .nth(cursor)
-            .expect("could not get current character");
-        match c {
-            '+' => incr(&mut ctx),
-            '-' => decr(&mut ctx),
-            '.' => output(&ctx),
-            ',' => input(&mut ctx),
-            '>' => incr_ptr(&mut ctx),
-            '<' => decr_ptr(&mut ctx),
-            '[' => handle_loop_start(&mut ctx, &mut cursor),
-            ']' => handle_loop_end(&mut ctx, &mut cursor),
-            _ => {}
+    while ctx.cursor < ctx.tokens.len() {
+        match ctx.tokens[ctx.cursor].t {
+            TokenType::Increment => incr(&mut ctx),
+            TokenType::Decrement => decr(&mut ctx),
+            TokenType::IncrementPointer => incr_ptr(&mut ctx),
+            TokenType::DecrementPointer => decr_ptr(&mut ctx),
+            TokenType::Input => input(&mut ctx),
+            TokenType::Output => output(&ctx),
+            TokenType::LoopBegin => handle_loop_start(&mut ctx),
+            TokenType::LoopEnd => handle_loop_end(&mut ctx),
+            TokenType::Comment => {}
         }
-        cursor += 1;
+        ctx.cursor += 1;
     }
 }

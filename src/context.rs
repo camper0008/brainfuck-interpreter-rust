@@ -1,61 +1,111 @@
-pub struct BracketPair {
-    pub start: usize,
-    pub end: usize,
+#[derive(PartialEq, Debug)]
+pub enum TokenType {
+    Increment,
+    Decrement,
+    IncrementPointer,
+    DecrementPointer,
+    Input,
+    Output,
+    LoopBegin,
+    LoopEnd,
+    Comment,
+}
+#[derive(Debug)]
+pub struct Token {
+    pub t: TokenType,
+    pub v: usize,
+}
+
+fn generate_matching_brackets(tokens: &mut Vec<Token>) {
+    let mut loop_indexes: Vec<usize> = Vec::new();
+    let mut loop_tokens: Vec<&mut Token> = Vec::new();
+    for (idx, mut token) in tokens.iter_mut().enumerate() {
+        match token.t {
+            TokenType::LoopBegin => {
+                loop_indexes.push(idx);
+                loop_tokens.push(token);
+            }
+            TokenType::LoopEnd => {
+                let mut tok = loop_tokens.pop().expect("unopened bracket end");
+                tok.v = idx;
+                let idx = loop_indexes.pop().expect("unopened bracket end");
+                token.v = idx;
+            }
+            _ => {}
+        }
+    }
+    if loop_indexes.len() > 0 {
+        panic!("unclosed bracket start");
+    }
+}
+
+fn tokenize(code: String) -> Vec<Token> {
+    let mut res = Vec::new();
+    for c in code.chars() {
+        res.push(match c {
+            '+' => Token {
+                t: TokenType::Increment,
+                v: 1,
+            },
+            '-' => Token {
+                t: TokenType::Decrement,
+                v: 1,
+            },
+            ',' => Token {
+                t: TokenType::Input,
+                v: 0,
+            },
+            '.' => Token {
+                t: TokenType::Output,
+                v: 0,
+            },
+            '>' => Token {
+                t: TokenType::IncrementPointer,
+                v: 1,
+            },
+            '<' => Token {
+                t: TokenType::DecrementPointer,
+                v: 1,
+            },
+            '[' => Token {
+                t: TokenType::LoopBegin,
+                v: 0,
+            },
+            ']' => Token {
+                t: TokenType::LoopEnd,
+                v: 0,
+            },
+            _ => Token {
+                t: TokenType::Comment,
+                v: 0,
+            },
+        })
+    }
+
+    res = res
+        .into_iter()
+        .filter(|token| token.t != TokenType::Comment)
+        .collect();
+
+    generate_matching_brackets(&mut res);
+
+    res
 }
 
 pub struct Context {
-    pub bracket_pairs: Vec<BracketPair>,
+    pub cursor: usize,
+    pub tokens: Vec<Token>,
     pub stack: Vec<u8>,
     pub stack_index: usize,
 }
 
 impl Context {
-    fn create_bracket_pairs(&mut self, code: String, start: usize) {
-        let mut nested = 0;
-        let mut pos = start;
-        for i in code.chars().skip(1 + start) {
-            pos += 1;
-            if i == '[' {
-                nested += 1;
-            } else if i == ']' {
-                if nested == 0 {
-                    self.bracket_pairs.push(BracketPair {
-                        start: start,
-                        end: pos,
-                    });
-                    return;
-                } else {
-                    nested -= 1;
-                }
-            }
+    pub fn new(code: String) -> Self {
+        Self {
+            cursor: 0,
+            tokens: tokenize(code),
+            stack: Vec::from([0]),
+            stack_index: 0,
         }
-        panic!("unclosed bracket start character at '{}'", start)
-    }
-    pub fn generate_bracket_pairs(&mut self, code: String) {
-        let mut pos = 0;
-        for i in code.chars() {
-            if i == '[' {
-                self.create_bracket_pairs(code.clone(), pos);
-            } else if i == ']' {
-                self.get_bracket_start(pos);
-            }
-            pos += 1;
-        }
-    }
-    pub fn get_bracket_start(&self, end: usize) -> usize {
-        for v in &self.bracket_pairs {
-            if v.end == end {
-                return v.start;
-            }
-        }
-        panic!("unopened bracket end character at '{}'", end)
-    }
-    pub fn get_bracket_end(&self, start: usize) -> usize {
-        for v in &self.bracket_pairs {
-            if v.start == start {
-                return v.end;
-            }
-        }
-        panic!("unclosed bracket start character at '{}'", start)
     }
 }
