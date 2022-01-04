@@ -109,9 +109,9 @@ fn tokenize(code: String) -> Vec<Token> {
         .into_iter()
         .filter(|token| token.t != TokenType::Comment)
         .collect();
+
     fold_duplicates(&mut res);
     generate_matching_brackets(&mut res);
-    //println!("{:?}", res);
 
     res
 }
