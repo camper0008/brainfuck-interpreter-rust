@@ -40,21 +40,17 @@ fn decr_ptr(ctx: &mut Context) {
     }
 }
 
-fn handle_loop_start(ctx: &mut Context, cursor: &mut u32) {
+fn handle_loop_start(ctx: &mut Context, cursor: &mut usize) {
     if ctx.stack[ctx.stack_index] == 0 {
-        let pair = ctx
-            .get_bracket_pair(*cursor)
-            .expect("could not find bracket pair end");
-        *cursor = pair.end;
+        let end = ctx.get_bracket_end(*cursor);
+        *cursor = end;
     }
 }
 
-fn handle_loop_end(ctx: &mut Context, cursor: &mut u32) {
+fn handle_loop_end(ctx: &mut Context, cursor: &mut usize) {
     if ctx.stack[ctx.stack_index] != 0 {
-        let pair = ctx
-            .get_bracket_pair(*cursor)
-            .expect("could not find bracket pair start");
-        *cursor = pair.start;
+        let start = ctx.get_bracket_start(*cursor);
+        *cursor = start;
     }
 }
 
@@ -63,11 +59,11 @@ pub fn run(code: String, mut ctx: Context) {
         ctx.stack.push(0);
     }
 
-    let mut cursor: u32 = 0;
-    while cursor < code.len().try_into().unwrap() {
+    let mut cursor: usize = 0;
+    while cursor < code.len() {
         let c = code
             .chars()
-            .nth(cursor.try_into().unwrap())
+            .nth(cursor)
             .expect("could not get current character");
         match c {
             '+' => incr(&mut ctx),

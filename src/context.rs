@@ -1,12 +1,6 @@
-#[derive(Copy, Clone)]
 pub struct BracketPair {
-    pub start: u32,
-    pub end: u32,
-}
-
-#[derive(Debug)]
-enum ErrorType {
-    InvalidBracketPairError,
+    pub start: usize,
+    pub end: usize,
 }
 
 pub struct Context {
@@ -16,10 +10,10 @@ pub struct Context {
 }
 
 impl Context {
-    fn create_bracket_pairs(&mut self, code: String, start: u32) -> Result<(), ErrorType> {
+    fn create_bracket_pairs(&mut self, code: String, start: usize) {
         let mut nested = 0;
         let mut pos = start;
-        for i in code.chars().skip((1 + start).try_into().unwrap()) {
+        for i in code.chars().skip(1 + start) {
             pos += 1;
             if i == '[' {
                 nested += 1;
@@ -29,33 +23,39 @@ impl Context {
                         start: start,
                         end: pos,
                     });
-                    return Ok(());
+                    return;
                 } else {
                     nested -= 1;
                 }
             }
         }
-        Err(ErrorType::InvalidBracketPairError)
+        panic!("unclosed bracket start character at '{}'", start)
     }
     pub fn generate_bracket_pairs(&mut self, code: String) {
         let mut pos = 0;
         for i in code.chars() {
             if i == '[' {
-                self.create_bracket_pairs(code.clone(), pos)
-                    .expect(format!("unclosed bracket start at character {}", pos).as_str());
+                self.create_bracket_pairs(code.clone(), pos);
             } else if i == ']' {
-                self.get_bracket_pair(pos)
-                    .expect(format!("unclosed bracket end at character {}", pos).as_str());
+                self.get_bracket_start(pos);
             }
             pos += 1;
         }
     }
-    pub fn get_bracket_pair(&self, pos: u32) -> Option<BracketPair> {
-        for i in 0..self.bracket_pairs.len() {
-            if self.bracket_pairs[i].start == pos || self.bracket_pairs[i].end == pos {
-                return Some(self.bracket_pairs[i]);
+    pub fn get_bracket_start(&self, end: usize) -> usize {
+        for v in &self.bracket_pairs {
+            if v.end == end {
+                return v.start;
             }
         }
-        None
+        panic!("unopened bracket end character at '{}'", end)
+    }
+    pub fn get_bracket_end(&self, start: usize) -> usize {
+        for v in &self.bracket_pairs {
+            if v.start == start {
+                return v.end;
+            }
+        }
+        panic!("unclosed bracket start character at '{}'", start)
     }
 }
