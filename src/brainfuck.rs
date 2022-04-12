@@ -23,7 +23,7 @@ fn decr(ctx: &mut Context) {
 }
 
 fn input(ctx: &mut Context) {
-    ctx.stack[ctx.stack_index] = io::get_char();
+    ctx.stack[ctx.stack_index] = io::input_char();
 }
 
 fn output(ctx: &Context) {
@@ -61,21 +61,21 @@ fn handle_loop_end(ctx: &mut Context) {
     }
 }
 
-pub fn run(mut ctx: Context) {
+pub fn run(ctx: &mut Context) {
     if ctx.stack.len() == 0 {
         ctx.stack.push(0);
     }
 
     while ctx.cursor < ctx.tokens.len() {
         match ctx.tokens[ctx.cursor].t {
-            TokenType::Increment => incr(&mut ctx),
-            TokenType::Decrement => decr(&mut ctx),
-            TokenType::IncrementPointer => incr_ptr(&mut ctx),
-            TokenType::DecrementPointer => decr_ptr(&mut ctx),
-            TokenType::Input => input(&mut ctx),
-            TokenType::Output => output(&ctx),
-            TokenType::LoopBegin => handle_loop_start(&mut ctx),
-            TokenType::LoopEnd => handle_loop_end(&mut ctx),
+            TokenType::Increment => incr(ctx),
+            TokenType::Decrement => decr(ctx),
+            TokenType::IncrementPointer => incr_ptr(ctx),
+            TokenType::DecrementPointer => decr_ptr(ctx),
+            TokenType::Input => input(ctx),
+            TokenType::Output => output(ctx),
+            TokenType::LoopBegin => handle_loop_start(ctx),
+            TokenType::LoopEnd => handle_loop_end(ctx),
             TokenType::Comment => {}
         }
         ctx.cursor += 1;

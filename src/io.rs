@@ -6,51 +6,56 @@ use std::io::Read;
 use std::io::Result;
 use std::path::PathBuf;
 
-fn get_file_absolute_path(relative_file_name: String) -> PathBuf {
-    let mut wd = get_working_directory();
+pub fn dump_flag_exists() -> bool {
+    env::args().skip(1).any(|t| t == "--dump" || t == "-d")
+}
+
+fn file_absolute_path(relative_file_name: String) -> PathBuf {
+    let mut wd = working_directory();
     wd.push(relative_file_name);
     wd
 }
 
-fn get_working_directory() -> PathBuf {
+fn working_directory() -> PathBuf {
     env::current_dir().expect("unable to get current working directory")
 }
 
-fn get_file_names_from_args() -> Vec<String> {
-    let mut args: Vec<String> = env::args().collect();
-    args.remove(0); // the command ran is always the first argument
-    return args;
+fn file_name_from_args() -> String {
+    let args = env::args().nth(1);
+    if args.is_none() {
+        println!("no input file given");
+        std::process::exit(1);
+    }
+    return args.unwrap();
 }
 
-fn get_file_content(relative_file_name: String) -> Result<String> {
-    let abs_name = get_file_absolute_path(relative_file_name.to_string());
+fn file_content(relative_file_name: String) -> Result<String> {
+    let abs_name = file_absolute_path(relative_file_name.to_string());
     let mut buffer = String::new();
     File::open(abs_name)?.read_to_string(&mut buffer)?;
     Ok(buffer)
 }
 
-pub fn get_file_content_from_args() -> Vec<String> {
-    let mut res = Vec::new();
+pub fn file_content_from_args() -> String {
+    let file_name = file_name_from_args();
 
-    let file_names = get_file_names_from_args();
-    for n in file_names.iter() {
-        match get_file_content(n.to_string()) {
-            Ok(c) => res.push(c),
-            Err(e) => println!("error reading from file '{}': {}", n, e),
+    match file_content(file_name.clone()) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("error reading from file '{}': {}", file_name, e);
+            std::process::exit(1);
         }
     }
-
-    res
 }
 
-pub fn get_char() -> u8 {
+pub fn input_char() -> u8 {
     let mut buffer: [u8; 1] = [0];
     let mut take = stdin().take(1);
     (take.read(&mut buffer)).expect("unable to read from buffer");
     buffer[0]
 }
 
-fn get_html_body(ctx: &Context) -> String {
+fn html_body(ctx: &Context) -> String {
     let mut elements = Vec::new();
 
     elements.push("<tbl-cnt><tbl>".to_string());
@@ -75,7 +80,7 @@ fn get_html_body(ctx: &Context) -> String {
         .fold(String::new(), |acc, curr| format!("{}{}", acc, curr))
 }
 
-fn get_html_head(ctx: &Context) -> String {
+fn html_head(ctx: &Context) -> String {
     format!(
         "<style>
         body {{
@@ -129,8 +134,8 @@ fn get_html_head(ctx: &Context) -> String {
 pub fn dump_ctx(ctx: Context) -> Result<()> {
     let html = format!(
         "<html><head>{}</head><body>{}</body></html>",
-        get_html_head(&ctx),
-        get_html_body(&ctx),
+        html_head(&ctx),
+        html_body(&ctx),
     );
 
     write("dump.html", html)
