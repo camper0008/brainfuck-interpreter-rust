@@ -8,8 +8,8 @@ When trying to decrement pointer below 0, it panics as this is technically undef
   
 When trying to increment pointer above the current allocated memory, simply pushes another byte onto the stack.
 
-Used by executing `<path to binary> <..path to file(s)>`
+Used by executing `<path to binary> <path to file>`
 
-Can run more than one file simply by adding another argument, though not recommended.
+If ran with `-d` or `--dump`, will create a html file of context data.
 
 Interprets `bf/bench.bf` in around ~1.615 seconds when compiled for release, according to the standard `time` command, though it's possible to optimize further.
